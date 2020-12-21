@@ -30,8 +30,8 @@ int main()
 
 	printf("Successfully initialized PDB:\n%s\n\n", Out.c_str());
 
-	DWORD out = 0;
-	dwSymRet = symbol_parser.GetSymbolAddress("LdrpMappingInfoIndex", out);
+	DWORD RvaOut = 0;
+	dwSymRet = symbol_parser.GetSymbolAddress("LdrpLoadDll", RvaOut);
 	if (dwSymRet != SYMBOL_ERR_SUCCESS)
 	{
 		printf("SYMBOL_PARSER::GetSymbolAddress failed with %08X\n", dwSymRet);
@@ -39,7 +39,26 @@ int main()
 		return 0;
 	}
 
-	printf("Located LdrpLoadDll at ntdll.dll+%08X\n", out);
-	
+	printf("Found LdrpLoadDll at ntdll.dll+%08X\n", RvaOut);
+
+	std::string name_out;
+	dwSymRet = symbol_parser.GetSymbolName(RvaOut, name_out);
+	if (dwSymRet != SYMBOL_ERR_SUCCESS)
+	{
+		printf("SYMBOL_PARSER::GetSymbolName failed with %08X\n", dwSymRet);
+
+		return 0;
+	}
+
+	printf("Symbolname of ntdll.dll+%08X is %s\n", RvaOut, name_out.c_str());
+
+	std::vector<SYM_INFO_COMPACT> info;
+	symbol_parser.EnumSymbols("LdrpLoad*Dll*", info);
+
+	for (auto & i : info)
+	{
+		printf("ntdll.dl+%08X: %s\n", i.RVA, i.szSymbol.c_str());
+	}
+
 	return 0;
 }
